@@ -243,10 +243,7 @@ export default function LaboratoryDetails() {
                     </div>
                   </div>
                   <p className="text-xs text-muted-foreground mt-2">
-Type '"preventiva" | "corretiva" | "emergencial"' is not assignable to type 'StatusType'.
-  Type '"emergencial"' is not assignable to type 'StatusType'.ts(2322)
-StatusBadge.tsx(17, 51): The expected type comes from property 'status' which is declared here on type 'IntrinsicAttributes & { status: StatusType; }'
-(property) status: StatusType                    {new Date(m.scheduledDate).toLocaleDateString("pt-BR")}
+                    {new Date(m.scheduledDate).toLocaleDateString("pt-BR")}
                   </p>
                 </CardContent>
               </Card>
