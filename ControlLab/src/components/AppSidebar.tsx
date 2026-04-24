@@ -81,7 +81,7 @@ export default function AppSidebar() {
     <>
       {/* Mobile header bar */}
       <div className="md:hidden fixed top-0 left-0 right-0 z-50 h-14 flex items-center gap-3 px-4 border-b border-sidebar-border bg-sidebar">
-        <button onClick={() => setMobileOpen(true)} className="p-2 rounded-lg text-sidebar-foreground hover:bg-sidebar-accent/50">
+        <button type="button" onClick={() => setMobileOpen(true)} className="p-2 rounded-lg text-sidebar-foreground hover:bg-sidebar-accent/50" aria-label="Open menu">
           <Menu className="w-5 h-5" />
         </button>
         <div className="flex items-center gap-2">
@@ -107,7 +107,12 @@ export default function AppSidebar() {
                   <p className="text-[10px] text-sidebar-foreground opacity-70">Gestão de Laboratórios</p>
                 </div>
               </div>
-              <button onClick={() => setMobileOpen(false)} className="p-2 rounded-lg text-sidebar-foreground hover:bg-sidebar-accent/50">
+              <button
+                type="button"
+                onClick={() => setMobileOpen(false)}
+                className="p-2 rounded-lg text-sidebar-foreground hover:bg-sidebar-accent/50"
+                aria-label="Fechar menu"
+              >
                 <X className="w-4 h-4" />
               </button>
             </div>
