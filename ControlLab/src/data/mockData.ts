@@ -24,7 +24,7 @@ export interface Maintenance {
   equipmentId: string;
   equipmentName: string;
   labId: string;
-  type: "preventiva" | "corretiva";
+  type: "preventiva" | "corretiva" | "emergencial";
   status: "pendente" | "em_andamento" | "concluida" | "atrasada";
   scheduledDate: string;
   completedDate: string | null;

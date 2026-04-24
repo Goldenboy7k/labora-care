@@ -1,6 +1,6 @@
 import { cn } from "@/lib/utils";
 
-type StatusType = "operacional" | "em_manutencao" | "inativo" | "pendente" | "em_andamento" | "concluida" | "atrasada" | "preventiva" | "corretiva";
+type StatusType = "operacional" | "em_manutencao" | "inativo" | "pendente" | "em_andamento" | "concluida" | "atrasada" | "preventiva" | "corretiva"  |  "emergencial";
 
 const statusConfig: Record<StatusType, { label: string; className: string }> = {
   operacional: { label: "Operacional", className: "bg-success/10 text-success" },
@@ -12,6 +12,7 @@ const statusConfig: Record<StatusType, { label: string; className: string }> = {
   atrasada: { label: "Atrasada", className: "bg-destructive/10 text-destructive" },
   preventiva: { label: "Preventiva", className: "bg-primary/10 text-primary" },
   corretiva: { label: "Corretiva", className: "bg-warning/10 text-warning" },
+  emergencial: { label: "Emergencial", className: "bg-destructive/10 text-destructive" }
 };
 
 export default function StatusBadge({ status }: { status: StatusType }) {

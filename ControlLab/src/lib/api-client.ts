@@ -44,14 +44,14 @@ export class ApiClient {
     return this.request<T>(endpoint, { method: 'GET' });
   }
 
-  static post<T>(endpoint: string, body: any) {
+  static post<T>(endpoint: string, body: unknown) {
     return this.request<T>(endpoint, {
       method: 'POST',
       body: JSON.stringify(body),
     });
   }
 
-  static put<T>(endpoint: string, body: any) {
+  static put<T>(endpoint: string, body: unknown) {
     return this.request<T>(endpoint, {
       method: 'PUT',
       body: JSON.stringify(body),
