@@ -3,11 +3,11 @@ import { useAuth } from "@/hooks/useAuth";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
-  requiredRole?: "admin" | "tecnico";
+  requiredRole?: "admin" | "tecnico" | "usuario";
 }
 
 export default function ProtectedRoute({ children, requiredRole }: ProtectedRouteProps) {
-  const { user, loading, isAdmin, isTecnico } = useAuth();
+  const { user, loading, isAdmin, isTecnico, isUsuario } = useAuth();
 
   if (loading) {
     return (
@@ -26,6 +26,10 @@ export default function ProtectedRoute({ children, requiredRole }: ProtectedRout
   }
 
   if (requiredRole === "tecnico" && !isTecnico && !isAdmin) {
+    return <Navigate to="/" replace />;
+  }
+
+  if (requiredRole === "usuario" && !isUsuario && !isTecnico && !isAdmin) {
     return <Navigate to="/" replace />;
   }
 

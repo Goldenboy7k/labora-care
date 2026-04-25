@@ -4,22 +4,7 @@ import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
 
-export default function AppSidebar() {
-  const [collapsed, setCollapsed] = useState(false);
-  const [mobileOpen, setMobileOpen] = useState(false);
-  const location = useLocation();
-  const { isAdmin, isTecnico, user, signOut } = useAuth();
-
-  const navItems = [
-    { to: "/", label: "Dashboard", icon: LayoutDashboard },
-    { to: "/inventario", label: "Inventário", icon: Package },
-    { to: "/manutencoes", label: "Manutenções", icon: Wrench },
-    ...(isAdmin ? [{ to: "/admin/aprovacoes", label: "Aprovações", icon: UserCheck }] : []),
-  ];
-
-  const roleBadge = isAdmin ? "Admin" : isTecnico ? "Técnico" : "Usuário";
-
-  const SidebarContent = ({ onNavClick }: { onNavClick?: () => void }) => (
+const SidebarContent = ({ onNavClick, collapsed, navItems, roleBadge, user, signOut, location }: any) => (
     <>
       <div className="flex items-center gap-3 px-4 py-5 border-b border-sidebar-border">
         <div className="w-8 h-8 rounded-lg bg-accent flex items-center justify-center shrink-0">
@@ -33,51 +18,66 @@ export default function AppSidebar() {
         )}
       </div>
       <nav className="flex-1 py-4 px-2 space-y-1">
-        {navItems.map((item) => {
-          const isActive = location.pathname === item.to;
-          return (
-            <NavLink
-              key={item.to}
-              to={item.to}
-              onClick={onNavClick}
-              className={cn(
-                "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors",
-                isActive
-                  ? "bg-sidebar-accent text-sidebar-primary"
-                  : "text-sidebar-foreground hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground"
-              )}
-            >
-              <item.icon className="w-5 h-5 shrink-0" />
-              {!collapsed && <span>{item.label}</span>}
-            </NavLink>
-          );
-        })}
-      </nav>
-      {/* User info & logout */}
-      <div className="border-t border-sidebar-border p-3 space-y-2">
-        {!collapsed && (
-          <div className="px-2">
-            <p className="text-xs text-sidebar-foreground truncate">{user?.email}</p>
-            <span className="text-[10px] px-1.5 py-0.5 rounded bg-sidebar-accent text-sidebar-accent-foreground">
-              {roleBadge}
-            </span>
-          </div>
+      {navItems.map((item: any) => {
+        const isActive = location.pathname === item.to;
+        return (
+          <NavLink
+            key={item.to}
+            to={item.to}
+            onClick={onNavClick}
+            className={cn(
+              "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors",
+              isActive
+                ? "bg-sidebar-accent text-sidebar-primary"
+                : "text-sidebar-foreground hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground"
+            )}
+          >
+            <item.icon className="w-5 h-5 shrink-0" />
+            {!collapsed && <span>{item.label}</span>}
+          </NavLink>
+        );
+      })}
+    </nav>
+    {/* User info & logout */}
+    <div className="border-t border-sidebar-border p-3 space-y-2">
+      {!collapsed && (
+        <div className="px-2">
+          <p className="text-xs text-sidebar-foreground truncate">{user?.email}</p>
+          <span className="text-[10px] px-1.5 py-0.5 rounded bg-sidebar-accent text-sidebar-accent-foreground">
+            {roleBadge}
+          </span>
+        </div>
+      )}
+      <button
+        onClick={signOut}
+        className={cn(
+          "flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-sidebar-foreground hover:bg-destructive/20 hover:text-destructive transition-colors w-full",
+          collapsed && "justify-center"
         )}
-        <button
-          onClick={signOut}
-          className={cn(
-            "flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-sidebar-foreground hover:bg-destructive/20 hover:text-destructive transition-colors w-full",
-            collapsed && "justify-center"
-          )}
-        >
-          <LogOut className="w-4 h-4 shrink-0" />
-          {!collapsed && <span>Sair</span>}
-        </button>
-      </div>
-    </>
-  );
+      >
+        <LogOut className="w-4 h-4 shrink-0" />
+        {!collapsed && <span>Sair</span>}
+      </button>
+    </div>
+  </>
+);
 
-  return (
+export default function AppSidebar() {
+  const [collapsed, setCollapsed] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const location = useLocation();
+  const { isAdmin, isTecnico, user, signOut } = useAuth();
+
+  const navItems = [
+    { to: "/", label: "Inicial", icon: LayoutDashboard },
+    { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+    { to: "/laboratorios", label: "Laboratórios", icon: Building2 },
+    { to: "/inventario", label: "Inventário", icon: Package },
+    { to: "/manutencoes", label: "Manutenções", icon: Wrench },
+    ...(isAdmin ? [{ to: "/admin/aprovacoes", label: "Aprovações", icon: UserCheck }] : []),
+  ];
+
+  const roleBadge = isAdmin ? "Admin" : isTecnico ? "Técnico" : "Usuário";
     <>
       {/* Mobile header bar */}
       <div className="md:hidden fixed top-0 left-0 right-0 z-50 h-14 flex items-center gap-3 px-4 border-b border-sidebar-border bg-sidebar">
@@ -158,7 +158,7 @@ export default function AppSidebar() {
           collapsed ? "w-16" : "w-64"
         )}
       >
-        <SidebarContent />
+        <SidebarContent collapsed={collapsed} navItems={navItems} roleBadge={roleBadge} user={user} signOut={signOut} location={location} />
         <button
           onClick={() => setCollapsed(!collapsed)}
           className="mx-2 mb-4 p-2 rounded-lg text-sidebar-foreground hover:bg-sidebar-accent/50 transition-colors flex items-center justify-center"

@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
 import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
+import { ApiClient } from "@/lib/api-client";
 import type { Database } from "@/integrations/supabase/types";
 
 type AppRole = Database["public"]["Enums"]["app_role"];
@@ -12,6 +13,7 @@ interface AuthContextType {
   loading: boolean;
   isAdmin: boolean;
   isTecnico: boolean;
+  isUsuario: boolean;
   signOut: () => Promise<void>;
 }
 
@@ -22,6 +24,7 @@ const AuthContext = createContext<AuthContextType>({
   loading: true,
   isAdmin: false,
   isTecnico: false,
+  isUsuario: false,
   signOut: async () => {},
 });
 
@@ -44,6 +47,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       async (_event, session) => {
         setSession(session);
         setUser(session?.user ?? null);
+        ApiClient.setToken(session?.access_token || null);
         if (session?.user) {
           setTimeout(() => fetchRoles(session.user.id), 0);
         } else {
@@ -56,6 +60,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
+      ApiClient.setToken(session?.access_token || null);
       if (session?.user) {
         fetchRoles(session.user.id);
       }
@@ -67,6 +72,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signOut = async () => {
     await supabase.auth.signOut();
+    ApiClient.setToken(null);
     setUser(null);
     setSession(null);
     setRoles([]);
@@ -81,6 +87,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         loading,
         isAdmin: roles.includes("admin"),
         isTecnico: roles.includes("tecnico"),
+        isUsuario: roles.includes("usuario"),
         signOut,
       }}
     >
