@@ -86,7 +86,9 @@ export default function Laboratorios() {
     }
   };
 
-  
+  useEffect(() => {
+    fetchData();
+  }, []);
 
   function toggleLabExpand(labId: string) {
     setExpandedLabs((prev) => ({
