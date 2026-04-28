@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { Search, Plus, CheckCircle, XCircle } from "lucide-react";
+import { useState, useEffect, useCallback } from "react";
+import { Search, Plus, CheckCircle, FileDown } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
@@ -14,6 +14,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { Maintenance, Equipment, Laboratory } from "@/models/types";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
+import { downloadMaintenancePdf } from "@/lib/maintenance-pdf";
 
 export default function Manutencoes() {
   const { isAdmin, isTecnico, user } = useAuth();
@@ -26,16 +27,23 @@ export default function Manutencoes() {
   const [typeFilter, setTypeFilter] = useState("all");
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<{
+    equipment_id: string;
+    equipment_name: string;
+    lab_id: string;
+    type: Maintenance["type"];
+    scheduled_date: string;
+    description: string;
+  }>({
     equipment_id: "",
     equipment_name: "",
     lab_id: "",
-    type: "preventiva" as const,
+    type: "preventiva",
     scheduled_date: "",
     description: "",
   });
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     try {
       const [maintData, eqData, labData] = await Promise.all([
         maintenanceService.getAll(),
@@ -51,14 +59,16 @@ export default function Manutencoes() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [toast]);
 
   useEffect(() => {
-    fetchData();
-  }, []);
+    void fetchData();
+  }, [fetchData]);
 
   const filtered = maintenances.filter((m) => {
-    const matchesSearch = m.equipment_name.toLowerCase().includes(search.toLowerCase()) || m.description.toLowerCase().includes(search.toLowerCase());
+    const desc = (m.description ?? "").toLowerCase();
+    const matchesSearch =
+      m.equipment_name.toLowerCase().includes(search.toLowerCase()) || desc.includes(search.toLowerCase());
     const matchesStatus = statusFilter === "all" || m.status === statusFilter;
     const matchesType = typeFilter === "all" || m.type === typeFilter;
     return matchesSearch && matchesStatus && matchesType;
@@ -86,17 +96,48 @@ export default function Manutencoes() {
     }
   };
 
-  const handleCloseMaintenance = async (id: string) => {
+  const handleCloseMaintenance = async (id: string, withPdf = false) => {
+    const completedDate = new Date().toISOString();
+    const current = maintenances.find((x) => x.id === id);
     try {
       await maintenanceService.update(id, {
         status: "concluida",
-        completed_date: new Date().toISOString(),
+        completed_date: completedDate,
       });
-      toast({ title: "Sucesso", description: "Manutenção concluída com sucesso" });
+      if (withPdf && current) {
+        const lab = laboratories.find((l) => l.id === current.lab_id);
+        try {
+          await downloadMaintenancePdf(
+            { ...current, status: "concluida", completed_date: completedDate },
+            lab?.name ?? current.lab_id
+          );
+          toast({ title: "Sucesso", description: "Manutenção concluída e PDF baixado." });
+        } catch (pdfErr) {
+          console.error(pdfErr);
+          toast({
+            title: "Manutenção concluída",
+            description: "A ordem foi fechada, mas o PDF não pôde ser gerado. Use \"Gerar PDF\" no card.",
+            variant: "destructive",
+          });
+        }
+      } else {
+        toast({ title: "Sucesso", description: "Manutenção concluída com sucesso" });
+      }
       fetchData();
     } catch (error) {
       console.error("Error closing maintenance:", error);
       toast({ title: "Erro", description: "Falha ao concluir manutenção", variant: "destructive" });
+    }
+  };
+
+  const handleGeneratePdf = async (m: Maintenance) => {
+    const lab = laboratories.find((l) => l.id === m.lab_id);
+    try {
+      await downloadMaintenancePdf(m, lab?.name ?? m.lab_id);
+      toast({ title: "PDF", description: "Relatório da manutenção gerado." });
+    } catch (e) {
+      console.error(e);
+      toast({ title: "Erro", description: "Não foi possível gerar o PDF.", variant: "destructive" });
     }
   };
 
@@ -196,7 +237,15 @@ export default function Manutencoes() {
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <Label htmlFor="type">Tipo</Label>
-                      <Select value={formData.type} onValueChange={(value: any) => setFormData({ ...formData, type: value })}>
+                      <Select
+                        value={formData.type}
+                        onValueChange={(value) =>
+                          setFormData({
+                            ...formData,
+                            type: value === "corretiva" ? "corretiva" : "preventiva",
+                          })
+                        }
+                      >
                         <SelectTrigger>
                           <SelectValue />
                         </SelectTrigger>
@@ -255,7 +304,7 @@ export default function Manutencoes() {
                     <StatusBadge status={m.type} />
                     <StatusBadge status={m.status} />
                   </div>
-                  <p className="text-xs sm:text-sm text-muted-foreground mt-1">{m.description}</p>
+                  <p className="text-xs sm:text-sm text-muted-foreground mt-1">{m.description ?? "—"}</p>
                   <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-2 text-xs text-muted-foreground">
                     <span>Lab: {lab?.name}</span>
                     <span>Resp: {m.responsible}</span>
@@ -274,17 +323,41 @@ export default function Manutencoes() {
                       <p className="text-sm font-semibold text-success">{new Date(m.completed_date).toLocaleDateString("pt-BR")}</p>
                     </div>
                   )}
-                  {canCloseMaintenance && (m.status === "pendente" || m.status === "em_andamento") && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleCloseMaintenance(m.id)}
-                      className="flex items-center gap-1"
-                    >
-                      <CheckCircle className="w-4 h-4" />
-                      Concluir
-                    </Button>
-                  )}
+                  <div className="flex flex-wrap items-center justify-end gap-2">
+                    {m.status === "concluida" && (
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        onClick={() => handleGeneratePdf(m)}
+                        className="flex items-center gap-1"
+                      >
+                        <FileDown className="w-4 h-4" />
+                        Gerar PDF
+                      </Button>
+                    )}
+                    {canCloseMaintenance && (m.status === "pendente" || m.status === "em_andamento") && (
+                      <>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleCloseMaintenance(m.id, false)}
+                          className="flex items-center gap-1"
+                        >
+                          <CheckCircle className="w-4 h-4" />
+                          Concluir
+                        </Button>
+                        <Button
+                          variant="default"
+                          size="sm"
+                          onClick={() => handleCloseMaintenance(m.id, true)}
+                          className="flex items-center gap-1"
+                        >
+                          <FileDown className="w-4 h-4" />
+                          Concluir e gerar PDF
+                        </Button>
+                      </>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>

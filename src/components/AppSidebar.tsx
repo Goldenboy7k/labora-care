@@ -78,6 +78,7 @@ export default function AppSidebar() {
   ];
 
   const roleBadge = isAdmin ? "Admin" : isTecnico ? "Técnico" : "Usuário";
+  return (
     <>
       {/* Mobile header bar */}
       <div className="md:hidden fixed top-0 left-0 right-0 z-50 h-14 flex items-center gap-3 px-4 border-b border-sidebar-border bg-sidebar">

@@ -98,12 +98,20 @@ return (
           </div>
 
           {/* Info Box */}
-          <div className="bg-blue-50 border-2 border-blue-200 rounded-xl p-6 text-center">
-            <h2 className="text-xl font-semibold text-foreground mb-2">Como funciona?</h2>
-            <p className="text-muted-foreground">
-              Escolha uma das opções acima para começar a gerenciar os laboratórios, equipamentos e manutenções de forma prática e eficiente.
-            </p>
-          </div>
+          <div className="bg-[#002147] text-white p-8 rounded-[20px] shadow-lg flex flex-col md:flex-row items-center justify-between">
+  <div className="flex flex-col">
+    <h2 className="text-2xl font-bold mb-1">Unidade Alagoinhas</h2>
+    <p className="text-sm opacity-80">
+Suporte técnico: ramal 4002-8922    </p>
+  </div>
+  
+  {/* Se quiser adicionar a linha vertical e a frase à direita como no outro banner */}
+  <div className="hidden md:block w-[1px] h-12 bg-blue-400 mx-8 opacity-30"></div>
+  
+  <div className="hidden md:block italic text-xs text-right max-w-[1000px] opacity-80">
+    "A tecnologia move o mundo, mas a gestão garante o futuro dos nossos laboratórios."
+  </div>
+</div>
         </div>
       </div>
     </div>

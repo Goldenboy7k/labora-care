@@ -1,15 +1,22 @@
 import { useState } from "react";
-import { Search } from "lucide-react";
+import { Search, CheckCircle } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
 import StatusBadge from "@/components/StatusBadge";
-import { maintenances, laboratories } from "@/data/mockData";
+import { maintenances as mockMaintenances, laboratories } from "@/data/mockData";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/hooks/useAuth";
+import { useToast } from "@/hooks/use-toast";
 
 export default function Manutencoes() {
+  const { isAdmin, isTecnico } = useAuth();
+  const { toast } = useToast();
+  const [maintenances, setMaintenances] = useState(mockMaintenances);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [typeFilter, setTypeFilter] = useState("all");
+  const canCloseMaintenance = isAdmin || isTecnico;
 
   const filtered = maintenances.filter((m) => {
     const matchesSearch = m.equipmentName.toLowerCase().includes(search.toLowerCase()) || m.description.toLowerCase().includes(search.toLowerCase());
@@ -17,6 +24,17 @@ export default function Manutencoes() {
     const matchesType = typeFilter === "all" || m.type === typeFilter;
     return matchesSearch && matchesStatus && matchesType;
   });
+
+  const handleCloseMaintenance = (id: string) => {
+    setMaintenances((prev) =>
+      prev.map((m) =>
+        m.id === id
+          ? { ...m, status: "concluida" as const, completedDate: new Date().toISOString() }
+          : m
+      )
+    );
+    toast({ title: "Sucesso", description: "Manutenção concluída com sucesso" });
+  };
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 space-y-6">
@@ -93,6 +111,17 @@ export default function Manutencoes() {
                       <p className="text-xs text-muted-foreground">Concluída</p>
                       <p className="text-sm font-semibold text-success">{new Date(m.completedDate).toLocaleDateString("pt-BR")}</p>
                     </div>
+                  )}
+                  {canCloseMaintenance && (m.status === "pendente" || m.status === "em_andamento") && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleCloseMaintenance(m.id)}
+                      className="flex items-center gap-1"
+                    >
+                      <CheckCircle className="w-4 h-4" />
+                      Concluir
+                    </Button>
                   )}
                 </div>
               </div>

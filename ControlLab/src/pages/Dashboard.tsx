@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Package, Wrench, AlertTriangle, CheckCircle } from "lucide-react";
-import { BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
+import { BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import KpiCard from "@/components/KpiCard";
 import StatusBadge from "@/components/StatusBadge";
 import { equipmentService } from "@/services/equipment-service";
@@ -10,7 +10,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { Equipment, Maintenance, Laboratory } from "@/models/types";
 import { cn } from "@/lib/utils";
 
-const COLORS = ["#3b82f6", "#f59e0b", "#ef4444", "#10b981"];
+// Cores que contrastam bem no fundo azul marinho
+const COLORS = ["#10b981", "#f59e0b", "#3b82f6", "#ef4444"];
 
 export default function Dashboard() {
   const [equipment, setEquipment] = useState<Equipment[]>([]);
@@ -38,7 +39,6 @@ export default function Dashboard() {
   useEffect(() => {
     fetchData();
 
-    // Set up real-time subscriptions
     const equipmentSubscription = supabase
       .channel('equipment_changes')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'equipment' }, () => {
@@ -77,20 +77,17 @@ export default function Dashboard() {
     .sort((a, b) => new Date(a.scheduled_date).getTime() - new Date(b.scheduled_date).getTime())
     .slice(0, 5);
 
-  // Data for Equipment Status Chart
   const equipmentStatusData = [
     { name: "Operacional", value: equipment.filter((e) => e.status === "operacional").length },
     { name: "Em Manutenção", value: equipment.filter((e) => e.status === "em_manutencao").length },
     { name: "Inativo", value: equipment.filter((e) => e.status === "inativo").length },
   ];
 
-  // Data for Equipment by Laboratory
   const labDistributionData = laboratories.map((lab) => ({
     name: lab.name,
     equipamentos: equipment.filter((e) => e.lab_id === lab.id).length,
   }));
 
-  // Data for Maintenance Status
   const maintenanceStatusData = [
     { name: "Concluída", value: maintenances.filter((m) => m.status === "concluida").length },
     { name: "Pendente", value: maintenances.filter((m) => m.status === "pendente").length },
@@ -100,7 +97,7 @@ export default function Dashboard() {
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 space-y-6 sm:space-y-8">
-      {/* Header */}
+      {/* Header Original */}
       <div>
         <h1 className="text-xl sm:text-2xl font-bold text-foreground">Dashboard</h1>
         <p className="text-sm text-muted-foreground mt-1">Visão geral dos laboratórios do SENAI Alagoinhas</p>
@@ -114,11 +111,12 @@ export default function Dashboard() {
         <KpiCard title="Concluídas este Mês" value={maintenances.filter((m) => m.status === "concluida").length} subtitle="dentro do prazo" icon={CheckCircle} variant="success" />
       </div>
 
-      {/* Charts Section */}
+      {/* Seção de Gráficos com Estilo Azul Escuro */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Equipment Status Pie Chart */}
-        <div className="rounded-xl border border-border bg-card shadow-sm p-6">
-          <h2 className="text-base sm:text-lg font-semibold text-foreground mb-4">Status dos Equipamentos</h2>
+        
+        {/* Gráfico Status Equipamentos */}
+        <div className="rounded-[20px] bg-[#002147] shadow-xl p-6 border-none">
+          <h2 className="text-base sm:text-lg font-bold text-white mb-4">Status dos Equipamentos</h2>
           <ResponsiveContainer width="100%" height={300}>
             <PieChart>
               <Pie
@@ -127,22 +125,23 @@ export default function Dashboard() {
                 cy="50%"
                 labelLine={false}
                 label={({ name, value }) => `${name}: ${value}`}
+                innerRadius={60}
                 outerRadius={100}
-                fill="#8884d8"
                 dataKey="value"
+                stroke="none"
               >
                 {equipmentStatusData.map((entry, index) => (
                   <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                 ))}
               </Pie>
-              <Tooltip />
+              <Tooltip contentStyle={{ backgroundColor: '#002147', border: 'none', borderRadius: '10px', color: '#fff' }} />
             </PieChart>
           </ResponsiveContainer>
         </div>
 
-        {/* Maintenance Status Pie Chart */}
-        <div className="rounded-xl border border-border bg-card shadow-sm p-6">
-          <h2 className="text-base sm:text-lg font-semibold text-foreground mb-4">Status das Manutenções</h2>
+        {/* Gráfico Status Manutenções */}
+        <div className="rounded-[20px] bg-[#002147] shadow-xl p-6 border-none">
+          <h2 className="text-base sm:text-lg font-bold text-white mb-4">Status das Manutenções</h2>
           <ResponsiveContainer width="100%" height={300}>
             <PieChart>
               <Pie
@@ -151,40 +150,41 @@ export default function Dashboard() {
                 cy="50%"
                 labelLine={false}
                 label={({ name, value }) => `${name}: ${value}`}
+                innerRadius={60}
                 outerRadius={100}
-                fill="#8884d8"
                 dataKey="value"
+                stroke="none"
               >
                 {maintenanceStatusData.map((entry, index) => (
                   <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                 ))}
               </Pie>
-              <Tooltip />
+              <Tooltip contentStyle={{ backgroundColor: '#002147', border: 'none', borderRadius: '10px', color: '#fff' }} />
             </PieChart>
           </ResponsiveContainer>
         </div>
       </div>
 
-      {/* Equipment by Laboratory Bar Chart */}
-      <div className="rounded-xl border border-border bg-card shadow-sm p-6">
+      {/* Equipamentos por Laboratório */}
+      <div className="rounded-[20px] border border-border bg-card shadow-sm p-6">
         <h2 className="text-base sm:text-lg font-semibold text-foreground mb-4">Equipamentos por Laboratório</h2>
         <ResponsiveContainer width="100%" height={300}>
           <BarChart data={labDistributionData} margin={{ top: 20, right: 30, left: 0, bottom: 60 }}>
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="name" angle={-45} textAnchor="end" height={100} interval={0} />
-            <YAxis />
+            <CartesianGrid strokeDasharray="3 3" vertical={false} opacity={0.2} />
+            <XAxis dataKey="name" angle={-45} textAnchor="end" height={100} interval={0} fontSize={12} />
+            <YAxis fontSize={12} />
             <Tooltip />
-            <Bar dataKey="equipamentos" fill="#3b82f6" />
+            <Bar dataKey="equipamentos" fill="#002147" radius={[4, 4, 0, 0]} />
           </BarChart>
         </ResponsiveContainer>
       </div>
 
-      {/* Recent Maintenance */}
+      {/* Próximas Manutenções */}
       <div>
         <h2 className="text-base sm:text-lg font-semibold text-foreground mb-3 sm:mb-4">Próximas Manutenções</h2>
         <div className="space-y-3">
           {recentMaintenances.map((m) => (
-            <div key={m.id} className="p-3 sm:p-4 rounded-xl border border-border bg-card shadow-sm">
+            <div key={m.id} className="p-3 sm:p-4 rounded-[15px] border border-border bg-card shadow-sm">
               <div className="flex items-start justify-between gap-2">
                 <p className="font-medium text-xs sm:text-sm text-card-foreground">{m.equipment_name}</p>
                 <StatusBadge status={m.status} />

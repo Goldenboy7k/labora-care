@@ -204,12 +204,14 @@ export default function LaboratoryDetails() {
                     <p><strong>Última Manutenção:</strong> {new Date(eq.lastMaintenance).toLocaleDateString("pt-BR")}</p>
                   )}
                 </div>
-                <div className="flex gap-2 mt-4">
-                  <Button size="sm" variant="outline" onClick={() => handleEditEquipment(eq.id)}>
-                    <Edit className="w-3 h-3" />
+                <div className="flex flex-col sm:flex-row gap-2 mt-4">
+                  <Button size="sm" variant="outline" onClick={() => handleEditEquipment(eq.id)} className="w-full sm:w-auto">
+                    <Edit className="w-3 h-3 mr-2" />
+                    Alterar
                   </Button>
-                  <Button size="sm" variant="outline" onClick={() => handleDeleteEquipment(eq.id)}>
-                    <Trash2 className="w-3 h-3" />
+                  <Button size="sm" variant="outline" onClick={() => handleDeleteEquipment(eq.id)} className="w-full sm:w-auto">
+                    <Trash2 className="w-3 h-3 mr-2" />
+                    Excluir
                   </Button>
                 </div>
               </CardContent>
