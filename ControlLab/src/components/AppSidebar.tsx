@@ -1,8 +1,83 @@
-import { NavLink, useLocation } from "react-router-dom";
+import { NavLink, useLocation, Location } from "react-router-dom";
 import { LayoutDashboard, Package, Wrench, Building2, ChevronLeft, ChevronRight, Menu, X, UserCheck, LogOut } from "lucide-react";
-import { useState } from "react";
+import { useState, ReactNode } from "react";
+import { User } from "@supabase/supabase-js";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
+
+interface NavItem {
+  to: string;
+  label: string;
+  icon: React.ElementType;
+}
+
+interface SidebarContentProps {
+  onNavClick?: () => void;
+  collapsed: boolean;
+  navItems: NavItem[];
+  roleBadge: string;
+  user: User | null;
+  signOut: () => void;
+  location: Location;
+}
+
+const SidebarContent = ({ onNavClick, collapsed, navItems, roleBadge, user, signOut, location }: SidebarContentProps) => (
+  <>
+    <div className="flex items-center gap-3 px-4 py-5 border-b border-sidebar-border">
+      <div className="w-8 h-8 rounded-lg bg-accent flex items-center justify-center shrink-0">
+        <Building2 className="w-5 h-5 text-accent-foreground" />
+      </div>
+      {!collapsed && (
+        <div className="overflow-hidden">
+          <h1 className="text-sm font-bold text-sidebar-accent-foreground tracking-wide">SENAI</h1>
+          <p className="text-[10px] text-sidebar-foreground opacity-70 truncate">Gestão de Laboratórios</p>
+        </div>
+      )}
+    </div>
+    <nav className="flex-1 py-4 px-2 space-y-1">
+      {navItems.map((item) => {
+        const isActive = location.pathname === item.to;
+        return (
+          <NavLink
+            key={item.to}
+            to={item.to}
+            onClick={onNavClick || (() => {})}
+            className={cn(
+              "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors",
+              isActive
+                ? "bg-sidebar-accent text-sidebar-primary"
+                : "text-sidebar-foreground hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground"
+            )}
+          >
+            <item.icon className="w-5 h-5 shrink-0" />
+            {!collapsed && <span>{item.label}</span>}
+          </NavLink>
+        );
+      })}
+    </nav>
+    {/* User info & logout */}
+    <div className="border-t border-sidebar-border p-3 space-y-2">
+      {!collapsed && (
+        <div className="px-2">
+          <p className="text-xs text-sidebar-foreground truncate">{user?.email}</p>
+          <span className="text-[10px] px-1.5 py-0.5 rounded bg-sidebar-accent text-sidebar-accent-foreground">
+            {roleBadge}
+          </span>
+        </div>
+      )}
+      <button
+        onClick={signOut}
+        className={cn(
+          "flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-sidebar-foreground hover:bg-destructive/20 hover:text-destructive transition-colors w-full",
+          collapsed && "justify-center"
+        )}
+      >
+        <LogOut className="w-4 h-4 shrink-0" />
+        {!collapsed && <span>Sair</span>}
+      </button>
+    </div>
+  </>
+);
 
 export default function AppSidebar() {
   const [collapsed, setCollapsed] = useState(false);
@@ -11,7 +86,9 @@ export default function AppSidebar() {
   const { isAdmin, isTecnico, user, signOut } = useAuth();
 
   const navItems = [
-    { to: "/", label: "Dashboard", icon: LayoutDashboard },
+    { to: "/", label: "Inicial", icon: LayoutDashboard },
+    { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+    { to: "/laboratorios", label: "Laboratórios", icon: Building2 },
     { to: "/inventario", label: "Inventário", icon: Package },
     { to: "/manutencoes", label: "Manutenções", icon: Wrench },
     ...(isAdmin ? [{ to: "/admin/aprovacoes", label: "Aprovações", icon: UserCheck }] : []),
@@ -19,69 +96,11 @@ export default function AppSidebar() {
 
   const roleBadge = isAdmin ? "Admin" : isTecnico ? "Técnico" : "Usuário";
 
-  const SidebarContent = ({ onNavClick }: { onNavClick?: () => void }) => (
-    <>
-      <div className="flex items-center gap-3 px-4 py-5 border-b border-sidebar-border">
-        <div className="w-8 h-8 rounded-lg bg-accent flex items-center justify-center shrink-0">
-          <Building2 className="w-5 h-5 text-accent-foreground" />
-        </div>
-        {!collapsed && (
-          <div className="overflow-hidden">
-            <h1 className="text-sm font-bold text-sidebar-accent-foreground tracking-wide">SENAI</h1>
-            <p className="text-[10px] text-sidebar-foreground opacity-70 truncate">Gestão de Laboratórios</p>
-          </div>
-        )}
-      </div>
-      <nav className="flex-1 py-4 px-2 space-y-1">
-        {navItems.map((item) => {
-          const isActive = location.pathname === item.to;
-          return (
-            <NavLink
-              key={item.to}
-              to={item.to}
-              onClick={onNavClick}
-              className={cn(
-                "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors",
-                isActive
-                  ? "bg-sidebar-accent text-sidebar-primary"
-                  : "text-sidebar-foreground hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground"
-              )}
-            >
-              <item.icon className="w-5 h-5 shrink-0" />
-              {!collapsed && <span>{item.label}</span>}
-            </NavLink>
-          );
-        })}
-      </nav>
-      {/* User info & logout */}
-      <div className="border-t border-sidebar-border p-3 space-y-2">
-        {!collapsed && (
-          <div className="px-2">
-            <p className="text-xs text-sidebar-foreground truncate">{user?.email}</p>
-            <span className="text-[10px] px-1.5 py-0.5 rounded bg-sidebar-accent text-sidebar-accent-foreground">
-              {roleBadge}
-            </span>
-          </div>
-        )}
-        <button
-          onClick={signOut}
-          className={cn(
-            "flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-sidebar-foreground hover:bg-destructive/20 hover:text-destructive transition-colors w-full",
-            collapsed && "justify-center"
-          )}
-        >
-          <LogOut className="w-4 h-4 shrink-0" />
-          {!collapsed && <span>Sair</span>}
-        </button>
-      </div>
-    </>
-  );
-
   return (
     <>
       {/* Mobile header bar */}
       <div className="md:hidden fixed top-0 left-0 right-0 z-50 h-14 flex items-center gap-3 px-4 border-b border-sidebar-border bg-sidebar">
-        <button type="button" onClick={() => setMobileOpen(true)} className="p-2 rounded-lg text-sidebar-foreground hover:bg-sidebar-accent/50" aria-label="Open menu">
+        <button onClick={() => setMobileOpen(true)} className="p-2 rounded-lg text-sidebar-foreground hover:bg-sidebar-accent/50" aria-label="Abrir menu">
           <Menu className="w-5 h-5" />
         </button>
         <div className="flex items-center gap-2">
@@ -107,12 +126,7 @@ export default function AppSidebar() {
                   <p className="text-[10px] text-sidebar-foreground opacity-70">Gestão de Laboratórios</p>
                 </div>
               </div>
-              <button
-                type="button"
-                onClick={() => setMobileOpen(false)}
-                className="p-2 rounded-lg text-sidebar-foreground hover:bg-sidebar-accent/50"
-                aria-label="Fechar menu"
-              >
+              <button onClick={() => setMobileOpen(false)} className="p-2 rounded-lg text-sidebar-foreground hover:bg-sidebar-accent/50" aria-label="Fechar menu">
                 <X className="w-4 h-4" />
               </button>
             </div>
@@ -159,11 +173,11 @@ export default function AppSidebar() {
       {/* Desktop sidebar */}
       <aside
         className={cn(
-          "gradient-sidebar hidden md:flex flex-col border-r border-sidebar-border transition-all duration-300 shrink-0",
+          "bg-gradient-to-b from-[#3e9ee8] to-[#003d6e] hidden md:flex flex-col border-r border-sidebar-border transition-all duration-300 shrink-0",
           collapsed ? "w-16" : "w-64"
         )}
       >
-        <SidebarContent />
+        <SidebarContent collapsed={collapsed} navItems={navItems} roleBadge={roleBadge} user={user} signOut={signOut} location={location} onNavClick={() => {}} />
         <button
           onClick={() => setCollapsed(!collapsed)}
           className="mx-2 mb-4 p-2 rounded-lg text-sidebar-foreground hover:bg-sidebar-accent/50 transition-colors flex items-center justify-center"

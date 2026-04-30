@@ -6,14 +6,14 @@ export function initializeSupabase(): SupabaseClient {
   if (supabase) return supabase;
 
   const url = process.env.SUPABASE_URL;
-  const key = process.env.SUPABASE_KEY;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_KEY;
 
   if (!url || !key) {
-    throw new Error('Missing SUPABASE_URL or SUPABASE_KEY in environment variables');
+    throw new Error('Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY (or SUPABASE_KEY) in environment variables');
   }
 
   supabase = createClient(url, key);
-  console.log('✅ Supabase initialized');
+  console.log('✅ Supabase initialized using backend Supabase key');
   return supabase;
 }
 
